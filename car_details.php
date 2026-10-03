@@ -1,6 +1,7 @@
 <?php
-include "config/db.php";
+session_start();
 
+include "config/db.php";
 $car_id = isset($_GET['car_id']) ? intval($_GET['car_id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
 
 if ($car_id <= 0) {
