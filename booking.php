@@ -1,12 +1,14 @@
 <?php
 session_start();
 
-echo "<pre>";
-print_r($_SESSION);
-echo "</pre>";
-exit();
-
 include "config/db.php";
+
+// User must be logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // Get car ID
 $car_id = isset($_GET['car_id']) ? (int) $_GET['car_id'] : 0;
 
