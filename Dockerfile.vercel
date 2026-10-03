@@ -4,12 +4,8 @@ WORKDIR /app
 
 RUN install-php-extensions mysqli
 
-RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
-COPY Caddyfile /etc/caddy/Caddyfile
-
 COPY . /app
 
-ENV PORT=80
+COPY Caddyfile /etc/caddy/Caddyfile
 
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
