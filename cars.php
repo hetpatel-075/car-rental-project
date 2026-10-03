@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 include "config/db.php";
 
 // Get filter values
