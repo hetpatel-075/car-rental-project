@@ -5,52 +5,37 @@ require_once __DIR__ . "/config/session.php";
 
 /*
 |--------------------------------------------------------------------------
-| Destroy the current session
+| Logout
 |--------------------------------------------------------------------------
 */
 
-$_SESSION = [];
+// Make sure the session is active
+if (session_status() === PHP_SESSION_ACTIVE) {
 
+    // Clear all session variables
+    $_SESSION = [];
 
-/*
-|--------------------------------------------------------------------------
-| Remove the session cookie
-|--------------------------------------------------------------------------
-*/
+    // Delete the session cookie
+    if (ini_get("session.use_cookies")) {
 
-if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
 
-    $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
+        );
+    }
 
-    setcookie(
-        session_name(),
-        '',
-        time() - 42000,
-        $params["path"],
-        $params["domain"] ?? '',
-        $params["secure"],
-        $params["httponly"]
-    );
+    // Destroy the session
+    session_destroy();
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Destroy the database session
-|--------------------------------------------------------------------------
-*/
-
-session_destroy();
-
-
-/*
-|--------------------------------------------------------------------------
-| Redirect to home
-|--------------------------------------------------------------------------
-*/
-
-header("Location: index.php");
-exit();
-
-?>
+// Redirect to login page
+header("Location: login.php");
+exit;
 ```
