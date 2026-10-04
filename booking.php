@@ -5,7 +5,8 @@ include "config/db.php";
 
 // User must be logged in
 if (!isset($_SESSION['user_id'])) {
-    die("BOOKING SESSION LOST");
+    header("Location: login.php");
+    exit();
 }
 // Get car ID
 $car_id = isset($_GET['car_id']) ? (int) $_GET['car_id'] : 0;
