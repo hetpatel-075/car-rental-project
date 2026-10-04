@@ -3,17 +3,18 @@
 
 /*
 |--------------------------------------------------------------------------
-| Admin Persistent Session
+| Persistent PHP Session Handler
 |--------------------------------------------------------------------------
-| Admin sessions are stored in the same TiDB database as customer
-| sessions, but use a different cookie/session name.
+| Stores PHP sessions in TiDB/MySQL.
+| This allows sessions to survive between different Vercel
+| serverless function instances.
 |--------------------------------------------------------------------------
 */
 
-require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/db.php";
 
 
-class AdminDatabaseSessionHandler implements SessionHandlerInterface
+class DatabaseSessionHandler implements SessionHandlerInterface
 {
     private mysqli $conn;
 
@@ -62,6 +63,7 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
 
         mysqli_stmt_close($stmt);
 
+        // New session
         return "";
     }
 
@@ -151,21 +153,23 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
 
 /*
 |--------------------------------------------------------------------------
-| Start admin session
+| SESSION CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
 if (session_status() === PHP_SESSION_NONE) {
 
     /*
-    | IMPORTANT:
-    | Customer uses CAR_RENTAL_SESSION.
-    | Admin uses CAR_RENTAL_ADMIN_SESSION.
+    | Use one fixed session name for the entire website.
+    | Every PHP page must use this same session.
     */
-    session_name("CAR_RENTAL_ADMIN_SESSION");
+    session_name("CAR_RENTAL_SESSION");
 
 
-    $handler = new AdminDatabaseSessionHandler($conn);
+    /*
+    | Register database session handler.
+    */
+    $handler = new DatabaseSessionHandler($conn);
 
     session_set_save_handler(
         $handler,
@@ -173,6 +177,10 @@ if (session_status() === PHP_SESSION_NONE) {
     );
 
 
+    /*
+    | Vercel uses HTTPS in production.
+    | The cookie should therefore be secure on HTTPS.
+    */
     $isHttps =
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         ||
@@ -180,6 +188,9 @@ if (session_status() === PHP_SESSION_NONE) {
             && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
 
+    /*
+    | Session cookie settings.
+    */
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
@@ -189,8 +200,9 @@ if (session_status() === PHP_SESSION_NONE) {
     ]);
 
 
+    /*
+    | Start session.
+    */
     session_start();
 }
-
-?>
 ```
