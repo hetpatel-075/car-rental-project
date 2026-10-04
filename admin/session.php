@@ -1,17 +1,6 @@
-```php
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Admin Persistent Session
-|--------------------------------------------------------------------------
-| Admin sessions are stored in the same TiDB database as customer
-| sessions, but use a different cookie/session name.
-|--------------------------------------------------------------------------
-*/
-
 require_once __DIR__ . "/../config/db.php";
-
 
 class AdminDatabaseSessionHandler implements SessionHandlerInterface
 {
@@ -36,10 +25,7 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
     {
         $stmt = mysqli_prepare(
             $this->conn,
-            "SELECT session_data
-             FROM app_sessions
-             WHERE session_id = ?
-             LIMIT 1"
+            "SELECT session_data FROM app_sessions WHERE session_id = ? LIMIT 1"
         );
 
         if (!$stmt) {
@@ -47,21 +33,15 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_bind_param($stmt, "s", $id);
-
-        if (!mysqli_stmt_execute($stmt)) {
-            mysqli_stmt_close($stmt);
-            return false;
-        }
-
-        mysqli_stmt_bind_result($stmt, $sessionData);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $data);
 
         if (mysqli_stmt_fetch($stmt)) {
             mysqli_stmt_close($stmt);
-            return $sessionData;
+            return $data;
         }
 
         mysqli_stmt_close($stmt);
-
         return "";
     }
 
@@ -72,27 +52,19 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         $stmt = mysqli_prepare(
             $this->conn,
             "INSERT INTO app_sessions
-                (session_id, session_data, last_activity)
-             VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-                session_data = VALUES(session_data),
-                last_activity = VALUES(last_activity)"
+            (session_id, session_data, last_activity)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            session_data = VALUES(session_data),
+            last_activity = VALUES(last_activity)"
         );
 
         if (!$stmt) {
             return false;
         }
 
-        mysqli_stmt_bind_param(
-            $stmt,
-            "ssi",
-            $id,
-            $data,
-            $time
-        );
-
+        mysqli_stmt_bind_param($stmt, "ssi", $id, $data, $time);
         $success = mysqli_stmt_execute($stmt);
-
         mysqli_stmt_close($stmt);
 
         return $success;
@@ -102,8 +74,7 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
     {
         $stmt = mysqli_prepare(
             $this->conn,
-            "DELETE FROM app_sessions
-             WHERE session_id = ?"
+            "DELETE FROM app_sessions WHERE session_id = ?"
         );
 
         if (!$stmt) {
@@ -111,9 +82,7 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_bind_param($stmt, "s", $id);
-
         $success = mysqli_stmt_execute($stmt);
-
         mysqli_stmt_close($stmt);
 
         return $success;
@@ -125,8 +94,7 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
 
         $stmt = mysqli_prepare(
             $this->conn,
-            "DELETE FROM app_sessions
-             WHERE last_activity < ?"
+            "DELETE FROM app_sessions WHERE last_activity < ?"
         );
 
         if (!$stmt) {
@@ -134,51 +102,27 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_bind_param($stmt, "i", $expire);
-
-        if (!mysqli_stmt_execute($stmt)) {
-            mysqli_stmt_close($stmt);
-            return false;
-        }
+        mysqli_stmt_execute($stmt);
 
         $deleted = mysqli_stmt_affected_rows($stmt);
-
         mysqli_stmt_close($stmt);
 
         return $deleted;
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Start admin session
-|--------------------------------------------------------------------------
-*/
-
 if (session_status() === PHP_SESSION_NONE) {
 
-    /*
-    | IMPORTANT:
-    | Customer uses CAR_RENTAL_SESSION.
-    | Admin uses CAR_RENTAL_ADMIN_SESSION.
-    */
     session_name("CAR_RENTAL_ADMIN_SESSION");
-
 
     $handler = new AdminDatabaseSessionHandler($conn);
 
-    session_set_save_handler(
-        $handler,
-        true
-    );
-
+    session_set_save_handler($handler, true);
 
     $isHttps =
-        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        ||
-        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
-            && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
     session_set_cookie_params([
         'lifetime' => 0,
@@ -188,9 +132,5 @@ if (session_status() === PHP_SESSION_NONE) {
         'samesite' => 'Lax'
     ]);
 
-
     session_start();
 }
-
-?>
-```
