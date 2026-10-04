@@ -1,4 +1,5 @@
 <?php
+
 $host = getenv("DB_HOST");
 $port = (int) getenv("DB_PORT");
 $dbname = getenv("DB_NAME");
@@ -7,7 +8,14 @@ $password = getenv("DB_PASSWORD");
 
 $conn = mysqli_init();
 
-mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+mysqli_ssl_set(
+    $conn,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+);
 
 if (!mysqli_real_connect(
     $conn,
@@ -21,4 +29,3 @@ if (!mysqli_real_connect(
 )) {
     die("Database connection failed.");
 }
-?>
