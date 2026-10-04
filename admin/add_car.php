@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
 
         // -------------------------
-        // IMAGE UPLOAD
+        // CLOUDINARY IMAGE UPLOAD
         // -------------------------
 
         $imageName = "";
@@ -71,53 +71,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $tmpName = $_FILES['image']['tmp_name'];
                 $fileSize = $_FILES['image']['size'];
 
-                $extension = strtolower(
-                    pathinfo($originalName, PATHINFO_EXTENSION)
-                );
+                $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-                $allowedExtensions = [
-                    "jpg",
-                    "jpeg",
-                    "png",
-                    "webp"
-                ];
+                $allowedExtensions = ["jpg", "jpeg", "png", "webp"];
 
                 if (!in_array($extension, $allowedExtensions)) {
-
                     $message = "Only JPG, JPEG, PNG and WEBP images are allowed.";
                     $messageType = "error";
 
                 } elseif ($fileSize > 5 * 1024 * 1024) {
-
                     $message = "Image size must be less than 5 MB.";
                     $messageType = "error";
 
                 } else {
 
-                    // Generate unique image name
-                    $imageName =
-                        time() . "_" .
-                        uniqid() . "." .
-                        $extension;
+                    $cloudName = "hct6y970";
+                    $uploadPreset = "car_rental_images";
+                    $uploadUrl = "https://api.cloudinary.com/v1_1/" . $cloudName . "/image/upload";
 
-                    $uploadPath =
-                        "../images/" . $imageName;
+                    $curl = curl_init();
 
-                    if (!move_uploaded_file($tmpName, $uploadPath)) {
+                    $postData = [
+                        "file" => curl_file_create($tmpName, mime_content_type($tmpName), $originalName),
+                        "upload_preset" => $uploadPreset,
+                        "folder" => "car_rental"
+                    ];
 
-                        $message = "Failed to upload image.";
+                    curl_setopt_array($curl, [
+                        CURLOPT_URL => $uploadUrl,
+                        CURLOPT_POST => true,
+                        CURLOPT_POSTFIELDS => $postData,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_TIMEOUT => 60
+                    ]);
+
+                    $response = curl_exec($curl);
+                    $curlError = curl_error($curl);
+                    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                    curl_close($curl);
+
+                    if ($response === false || $curlError || $httpCode < 200 || $httpCode >= 300) {
+                        $message = "Image upload failed. Please try again.";
                         $messageType = "error";
+                    } else {
+                        $cloudinaryData = json_decode($response, true);
 
-                        $imageName = "";
+                        if (!empty($cloudinaryData['secure_url'])) {
+                            $imageName = $cloudinaryData['secure_url'];
+                        } else {
+                            $message = "Cloudinary did not return an image URL.";
+                            $messageType = "error";
+                        }
                     }
                 }
 
             } else {
-
                 $message = "There was an error uploading the image.";
                 $messageType = "error";
             }
         }
+
 
 
         // -------------------------
@@ -163,10 +176,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             } else {
 
-                // Remove uploaded image if database insertion fails
-                if ($imageName != "" && file_exists("../images/" . $imageName)) {
-                    unlink("../images/" . $imageName);
-                }
 
                 $message = "Failed to add car. Please try again.";
                 $messageType = "error";
