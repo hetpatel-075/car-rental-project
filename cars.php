@@ -1,19 +1,43 @@
 <?php
-session_start();
+
+require_once __DIR__ . "/config/session.php";
 
 include "config/db.php";
 
-// Get filter values
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$car_type = isset($_GET['car_type']) ? trim($_GET['car_type']) : '';
-$fuel_type = isset($_GET['fuel_type']) ? trim($_GET['fuel_type']) : '';
-$sort = isset($_GET['sort']) ? $_GET['sort'] : '';
 
-// Build query
+// -------------------------
+// GET FILTER VALUES
+// -------------------------
+
+$search = isset($_GET['search'])
+    ? trim($_GET['search'])
+    : '';
+
+$car_type = isset($_GET['car_type'])
+    ? trim($_GET['car_type'])
+    : '';
+
+$fuel_type = isset($_GET['fuel_type'])
+    ? trim($_GET['fuel_type'])
+    : '';
+
+$sort = isset($_GET['sort'])
+    ? $_GET['sort']
+    : '';
+
+
+// -------------------------
+// BUILD QUERY
+// -------------------------
+
 $sql = "SELECT * FROM cars WHERE 1=1";
 
 if ($search != '') {
-    $search_safe = mysqli_real_escape_string($conn, $search);
+
+    $search_safe = mysqli_real_escape_string(
+        $conn,
+        $search
+    );
 
     $sql .= " AND (
         car_name LIKE '%$search_safe%'
@@ -22,46 +46,85 @@ if ($search != '') {
     )";
 }
 
+
 if ($car_type != '') {
-    $car_type_safe = mysqli_real_escape_string($conn, $car_type);
+
+    $car_type_safe = mysqli_real_escape_string(
+        $conn,
+        $car_type
+    );
+
     $sql .= " AND car_type = '$car_type_safe'";
 }
 
+
 if ($fuel_type != '') {
-    $fuel_type_safe = mysqli_real_escape_string($conn, $fuel_type);
+
+    $fuel_type_safe = mysqli_real_escape_string(
+        $conn,
+        $fuel_type
+    );
+
     $sql .= " AND fuel_type = '$fuel_type_safe'";
 }
 
-// Sorting
+
+// -------------------------
+// SORTING
+// -------------------------
+
 if ($sort == 'price_low') {
+
     $sql .= " ORDER BY price_per_day ASC";
+
 } elseif ($sort == 'price_high') {
+
     $sql .= " ORDER BY price_per_day DESC";
+
 } elseif ($sort == 'name_az') {
+
     $sql .= " ORDER BY car_name ASC";
+
 } elseif ($sort == 'name_za') {
+
     $sql .= " ORDER BY car_name DESC";
+
 } else {
+
     $sql .= " ORDER BY car_id DESC";
 }
 
+
 $result = mysqli_query($conn, $sql);
 
-// Get car types
+
+// -------------------------
+// GET CAR TYPES
+// -------------------------
+
 $type_result = mysqli_query(
     $conn,
-    "SELECT DISTINCT car_type FROM cars
-     WHERE car_type IS NOT NULL AND car_type != ''
+    "SELECT DISTINCT car_type
+     FROM cars
+     WHERE car_type IS NOT NULL
+     AND car_type != ''
      ORDER BY car_type"
 );
 
-// Get fuel types
+
+// -------------------------
+// GET FUEL TYPES
+// -------------------------
+
 $fuel_result = mysqli_query(
     $conn,
-    "SELECT DISTINCT fuel_type FROM cars
-     WHERE fuel_type IS NOT NULL AND fuel_type != ''
+    "SELECT DISTINCT fuel_type
+     FROM cars
+     WHERE fuel_type IS NOT NULL
+     AND fuel_type != ''
      ORDER BY fuel_type"
 );
+
 ?>
 
 <!DOCTYPE html>
@@ -70,7 +133,11 @@ $fuel_result = mysqli_query(
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Browse Cars - CarRental</title>
 
@@ -87,7 +154,9 @@ $fuel_result = mysqli_query(
             color: #222;
         }
 
-        /* Navbar */
+        /* -------------------------
+           NAVBAR
+        ------------------------- */
 
         .navbar {
             background: #111827;
@@ -122,7 +191,15 @@ $fuel_result = mysqli_query(
             color: #60a5fa;
         }
 
-        /* Page Header */
+        .welcome-text {
+            color: #d1d5db;
+            font-size: 15px;
+        }
+
+
+        /* -------------------------
+           PAGE HEADER
+        ------------------------- */
 
         .page-header {
             text-align: center;
@@ -139,7 +216,10 @@ $fuel_result = mysqli_query(
             margin: 0;
         }
 
-        /* Filters */
+
+        /* -------------------------
+           FILTERS
+        ------------------------- */
 
         .filter-box {
             width: 86%;
@@ -166,6 +246,11 @@ $fuel_result = mysqli_query(
             border-radius: 7px;
             font-size: 14px;
         }
+
+
+        /* -------------------------
+           BUTTONS
+        ------------------------- */
 
         .btn {
             border: none;
@@ -196,7 +281,10 @@ $fuel_result = mysqli_query(
             background: #d1d5db;
         }
 
-        /* Cars */
+
+        /* -------------------------
+           CARS
+        ------------------------- */
 
         .cars-container {
             width: 86%;
@@ -287,7 +375,10 @@ $fuel_result = mysqli_query(
             color: #777;
         }
 
-        /* Status */
+
+        /* -------------------------
+           STATUS
+        ------------------------- */
 
         .status {
             display: inline-block;
@@ -308,7 +399,10 @@ $fuel_result = mysqli_query(
             color: #dc2626;
         }
 
-        /* Buttons */
+
+        /* -------------------------
+           CARD BUTTONS
+        ------------------------- */
 
         .card-buttons {
             display: grid;
@@ -340,7 +434,10 @@ $fuel_result = mysqli_query(
             cursor: not-allowed;
         }
 
-        /* No Cars */
+
+        /* -------------------------
+           NO CARS
+        ------------------------- */
 
         .no-cars {
             background: white;
@@ -350,7 +447,10 @@ $fuel_result = mysqli_query(
             color: #666;
         }
 
-        /* Responsive */
+
+        /* -------------------------
+           RESPONSIVE
+        ------------------------- */
 
         @media (max-width: 1000px) {
 
@@ -363,6 +463,7 @@ $fuel_result = mysqli_query(
             }
 
         }
+
 
         @media (max-width: 650px) {
 
@@ -398,9 +499,13 @@ $fuel_result = mysqli_query(
 
 </head>
 
+
 <body>
 
-<!-- Navbar -->
+
+<!-- =========================
+     NAVBAR
+========================= -->
 
 <nav class="navbar">
 
@@ -408,25 +513,57 @@ $fuel_result = mysqli_query(
         🚗 CarRental
     </div>
 
+
     <div class="nav-links">
 
-        <a href="index.php">Home</a>
-        <a href="cars.php">Cars</a>
-        <a href="index.php#about">About</a>
-        <a href="index.php#contact">Contact</a>
+        <a href="index.php">
+            Home
+        </a>
+
+        <a href="cars.php">
+            Cars
+        </a>
+
+        <a href="index.php#about">
+            About
+        </a>
+
+        <a href="index.php#contact">
+            Contact
+        </a>
+
 
         <?php if (isset($_SESSION['user_id'])) { ?>
 
-            <span>
-                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+            <span class="welcome-text">
+                Welcome,
+                <?php
+                echo htmlspecialchars(
+                    $_SESSION['user_name'] ?? 'User',
+                    ENT_QUOTES,
+                    'UTF-8'
+                );
+                ?>
             </span>
 
-            <a href="my_bookings.php">My Bookings</a>
-            <a href="logout.php">Logout</a>
+
+            <a href="my_bookings.php">
+                My Bookings
+            </a>
+
+
+            <a href="logout.php">
+                Logout
+            </a>
+
 
         <?php } else { ?>
 
-            <a href="login.php">Login</a>
+
+            <a href="login.php">
+                Login
+            </a>
+
 
         <?php } ?>
 
@@ -435,11 +572,15 @@ $fuel_result = mysqli_query(
 </nav>
 
 
-<!-- Page Header -->
+<!-- =========================
+     PAGE HEADER
+========================= -->
 
 <div class="page-header">
 
-    <h1>🚘 Browse Our Cars</h1>
+    <h1>
+        🚘 Browse Our Cars
+    </h1>
 
     <p>
         Find the perfect car for your next journey
@@ -448,30 +589,52 @@ $fuel_result = mysqli_query(
 </div>
 
 
-<!-- Filters -->
+<!-- =========================
+     FILTERS
+========================= -->
 
 <div class="filter-box">
 
-    <form method="GET" action="cars.php" class="filter-form">
+    <form
+        method="GET"
+        action="cars.php"
+        class="filter-form"
+    >
 
         <input
             type="text"
             name="search"
             placeholder="Search car, brand or model..."
-            value="<?php echo htmlspecialchars($search); ?>"
+            value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>"
         >
+
 
         <select name="car_type">
 
-            <option value="">All Car Types</option>
+            <option value="">
+                All Car Types
+            </option>
+
 
             <?php while ($type = mysqli_fetch_assoc($type_result)) { ?>
 
                 <option
-                    value="<?php echo htmlspecialchars($type['car_type']); ?>"
-                    <?php if ($car_type == $type['car_type']) echo 'selected'; ?>
+                    value="<?php echo htmlspecialchars($type['car_type'], ENT_QUOTES, 'UTF-8'); ?>"
+                    <?php
+                    if ($car_type == $type['car_type']) {
+                        echo 'selected';
+                    }
+                    ?>
                 >
-                    <?php echo htmlspecialchars($type['car_type']); ?>
+
+                    <?php
+                    echo htmlspecialchars(
+                        $type['car_type'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    );
+                    ?>
+
                 </option>
 
             <?php } ?>
@@ -481,15 +644,30 @@ $fuel_result = mysqli_query(
 
         <select name="fuel_type">
 
-            <option value="">All Fuel Types</option>
+            <option value="">
+                All Fuel Types
+            </option>
+
 
             <?php while ($fuel = mysqli_fetch_assoc($fuel_result)) { ?>
 
                 <option
-                    value="<?php echo htmlspecialchars($fuel['fuel_type']); ?>"
-                    <?php if ($fuel_type == $fuel['fuel_type']) echo 'selected'; ?>
+                    value="<?php echo htmlspecialchars($fuel['fuel_type'], ENT_QUOTES, 'UTF-8'); ?>"
+                    <?php
+                    if ($fuel_type == $fuel['fuel_type']) {
+                        echo 'selected';
+                    }
+                    ?>
                 >
-                    <?php echo htmlspecialchars($fuel['fuel_type']); ?>
+
+                    <?php
+                    echo htmlspecialchars(
+                        $fuel['fuel_type'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    );
+                    ?>
+
                 </option>
 
             <?php } ?>
@@ -499,32 +677,54 @@ $fuel_result = mysqli_query(
 
         <select name="sort">
 
-            <option value="">Sort By</option>
+            <option value="">
+                Sort By
+            </option>
+
 
             <option
                 value="price_low"
-                <?php if ($sort == 'price_low') echo 'selected'; ?>
+                <?php
+                if ($sort == 'price_low') {
+                    echo 'selected';
+                }
+                ?>
             >
                 Price: Low to High
             </option>
 
+
             <option
                 value="price_high"
-                <?php if ($sort == 'price_high') echo 'selected'; ?>
+                <?php
+                if ($sort == 'price_high') {
+                    echo 'selected';
+                }
+                ?>
             >
                 Price: High to Low
             </option>
 
+
             <option
                 value="name_az"
-                <?php if ($sort == 'name_az') echo 'selected'; ?>
+                <?php
+                if ($sort == 'name_az') {
+                    echo 'selected';
+                }
+                ?>
             >
                 Name: A to Z
             </option>
 
+
             <option
                 value="name_za"
-                <?php if ($sort == 'name_za') echo 'selected'; ?>
+                <?php
+                if ($sort == 'name_za') {
+                    echo 'selected';
+                }
+                ?>
             >
                 Name: Z to A
             </option>
@@ -532,11 +732,18 @@ $fuel_result = mysqli_query(
         </select>
 
 
-        <button type="submit" class="btn search-btn">
+        <button
+            type="submit"
+            class="btn search-btn"
+        >
             🔍 Search
         </button>
 
-        <a href="cars.php" class="btn reset-btn">
+
+        <a
+            href="cars.php"
+            class="btn reset-btn"
+        >
             Reset
         </a>
 
@@ -545,7 +752,9 @@ $fuel_result = mysqli_query(
 </div>
 
 
-<!-- Cars -->
+<!-- =========================
+     CARS
+========================= -->
 
 <div class="cars-container">
 
@@ -555,27 +764,49 @@ $fuel_result = mysqli_query(
 
     ?>
 
+
     <div class="results-text">
 
-        Showing <strong><?php echo $car_count; ?></strong> car(s)
+        Showing
+        <strong>
+            <?php echo $car_count; ?>
+        </strong>
+        car(s)
 
     </div>
 
 
     <?php if ($car_count > 0) { ?>
 
+
         <div class="cars-grid">
+
 
             <?php while ($car = mysqli_fetch_assoc($result)) { ?>
 
+
                 <div class="car-card">
 
-                    <?php if (!empty($car['image']) && file_exists("images/" . $car['image'])) { ?>
+
+                    <?php
+                    if (
+                        !empty($car['image']) &&
+                        file_exists("images/" . $car['image'])
+                    ) {
+                    ?>
 
                         <img
-                            src="images/<?php echo htmlspecialchars($car['image']); ?>"
+                            src="images/<?php echo htmlspecialchars(
+                                $car['image'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ); ?>"
                             class="car-image"
-                            alt="<?php echo htmlspecialchars($car['car_name']); ?>"
+                            alt="<?php echo htmlspecialchars(
+                                $car['car_name'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ); ?>"
                         >
 
                     <?php } else { ?>
@@ -589,47 +820,119 @@ $fuel_result = mysqli_query(
 
                     <div class="car-content">
 
+
                         <h2>
-                            <?php echo htmlspecialchars($car['car_name']); ?>
+
+                            <?php
+                            echo htmlspecialchars(
+                                $car['car_name'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            );
+                            ?>
+
                         </h2>
+
 
                         <div class="brand-model">
 
-                            <?php echo htmlspecialchars($car['brand']); ?>
+                            <?php
+                            echo htmlspecialchars(
+                                $car['brand'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            );
+                            ?>
+
                             -
-                            <?php echo htmlspecialchars($car['model']); ?>
+
+                            <?php
+                            echo htmlspecialchars(
+                                $car['model'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            );
+                            ?>
 
                         </div>
 
 
                         <div class="car-info">
 
+
                             <div class="info-item">
+
                                 🚙
-                                <?php echo htmlspecialchars($car['car_type']); ?>
+
+                                <?php
+                                echo htmlspecialchars(
+                                    $car['car_type'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                );
+                                ?>
+
                             </div>
 
+
                             <div class="info-item">
+
                                 ⛽
-                                <?php echo htmlspecialchars($car['fuel_type']); ?>
+
+                                <?php
+                                echo htmlspecialchars(
+                                    $car['fuel_type'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                );
+                                ?>
+
                             </div>
 
+
                             <div class="info-item">
+
                                 👥
-                                <?php echo htmlspecialchars($car['seats']); ?> Seats
+
+                                <?php
+                                echo htmlspecialchars(
+                                    $car['seats'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                );
+                                ?>
+
+                                Seats
+
                             </div>
 
+
                             <div class="info-item">
+
                                 📅
-                                <?php echo htmlspecialchars($car['model']); ?>
+
+                                <?php
+                                echo htmlspecialchars(
+                                    $car['model'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                );
+                                ?>
+
                             </div>
+
 
                         </div>
 
 
                         <div class="price">
 
-                            ₹<?php echo number_format($car['price_per_day'], 2); ?>
+                            ₹<?php
+                            echo number_format(
+                                (float) $car['price_per_day'],
+                                2
+                            );
+                            ?>
 
                             <span>
                                 / day
@@ -638,7 +941,11 @@ $fuel_result = mysqli_query(
                         </div>
 
 
-                        <?php if (strtolower($car['status']) == 'available') { ?>
+                        <?php
+                        if (
+                            strtolower($car['status']) == 'available'
+                        ) {
+                        ?>
 
                             <div class="status available">
                                 ● Available
@@ -647,7 +954,17 @@ $fuel_result = mysqli_query(
                         <?php } else { ?>
 
                             <div class="status unavailable">
-                                ● <?php echo htmlspecialchars($car['status']); ?>
+
+                                ●
+
+                                <?php
+                                echo htmlspecialchars(
+                                    $car['status'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                );
+                                ?>
+
                             </div>
 
                         <?php } ?>
@@ -655,18 +972,23 @@ $fuel_result = mysqli_query(
 
                         <div class="card-buttons">
 
+
                             <a
-                                href="car_details.php?car_id=<?php echo $car['car_id']; ?>"
+                                href="car_details.php?car_id=<?php echo (int) $car['car_id']; ?>"
                                 class="btn details-btn"
                             >
                                 👁 View Details
                             </a>
 
 
-                            <?php if (strtolower($car['status']) == 'available') { ?>
+                            <?php
+                            if (
+                                strtolower($car['status']) == 'available'
+                            ) {
+                            ?>
 
                                 <a
-                                    href="booking.php?car_id=<?php echo $car['car_id']; ?>"
+                                    href="booking.php?car_id=<?php echo (int) $car['car_id']; ?>"
                                     class="btn book-btn"
                                 >
                                     📅 Book Now
@@ -680,35 +1002,51 @@ $fuel_result = mysqli_query(
 
                             <?php } ?>
 
+
                         </div>
+
 
                     </div>
 
                 </div>
 
+
             <?php } ?>
+
 
         </div>
 
+
     <?php } else { ?>
+
 
         <div class="no-cars">
 
-            <h2>😔 No Cars Found</h2>
+            <h2>
+                😔 No Cars Found
+            </h2>
 
             <p>
                 Try changing your search or filter options.
             </p>
 
-            <a href="cars.php" class="btn search-btn">
+
+            <a
+                href="cars.php"
+                class="btn search-btn"
+            >
                 View All Cars
             </a>
 
         </div>
 
+
     <?php } ?>
+
 
 </div>
 
+
 </body>
+
 </html>
