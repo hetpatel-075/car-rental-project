@@ -1,17 +1,15 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Persistent PHP Session Handler
-|--------------------------------------------------------------------------
-| Stores PHP sessions in TiDB/MySQL.
-| This allows sessions to survive between different Vercel
-| serverless function instances.
-|--------------------------------------------------------------------------
-*/
-
 require_once __DIR__ . "/db.php";
 
+
+/*
+|--------------------------------------------------------------------------
+| DATABASE SESSION HANDLER
+|--------------------------------------------------------------------------
+| Stores PHP sessions in the MySQL/TiDB database.
+|--------------------------------------------------------------------------
+*/
 
 class DatabaseSessionHandler implements SessionHandlerInterface
 {
@@ -62,7 +60,6 @@ class DatabaseSessionHandler implements SessionHandlerInterface
 
         mysqli_stmt_close($stmt);
 
-        // New session
         return "";
     }
 
@@ -152,15 +149,14 @@ class DatabaseSessionHandler implements SessionHandlerInterface
 
 /*
 |--------------------------------------------------------------------------
-| SESSION CONFIGURATION
+| START SESSION
 |--------------------------------------------------------------------------
 */
 
 if (session_status() === PHP_SESSION_NONE) {
 
     /*
-    | Use one fixed session name for the entire website.
-    | Every PHP page must use this same session.
+    | Use the same session name across the entire website.
     */
     session_name("CAR_RENTAL_SESSION");
 
@@ -177,18 +173,22 @@ if (session_status() === PHP_SESSION_NONE) {
 
 
     /*
-    | Vercel uses HTTPS in production.
-    | The cookie should therefore be secure on HTTPS.
+    | Detect HTTPS.
+    | Vercel normally uses HTTPS.
     */
-    $isHttps =
+    $isHttps = (
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         ||
-        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
-            && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        (
+            !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
+            &&
+            strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
+        )
+    );
 
 
     /*
-    | Session cookie settings.
+    | Configure session cookie.
     */
     session_set_cookie_params([
         'lifetime' => 0,
@@ -200,7 +200,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 
     /*
-    | Start session.
+    | Start PHP session.
     */
     session_start();
 }
