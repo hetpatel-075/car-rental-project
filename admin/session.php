@@ -25,7 +25,10 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
     {
         $stmt = mysqli_prepare(
             $this->conn,
-            "SELECT session_data FROM app_sessions WHERE session_id = ? LIMIT 1"
+            "SELECT session_data
+             FROM app_sessions
+             WHERE session_id = ?
+             LIMIT 1"
         );
 
         if (!$stmt) {
@@ -33,7 +36,12 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_bind_param($stmt, "s", $id);
-        mysqli_stmt_execute($stmt);
+
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return false;
+        }
+
         mysqli_stmt_bind_result($stmt, $data);
 
         if (mysqli_stmt_fetch($stmt)) {
@@ -42,6 +50,7 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_close($stmt);
+
         return "";
     }
 
@@ -52,19 +61,27 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         $stmt = mysqli_prepare(
             $this->conn,
             "INSERT INTO app_sessions
-            (session_id, session_data, last_activity)
-            VALUES (?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-            session_data = VALUES(session_data),
-            last_activity = VALUES(last_activity)"
+                (session_id, session_data, last_activity)
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                session_data = VALUES(session_data),
+                last_activity = VALUES(last_activity)"
         );
 
         if (!$stmt) {
             return false;
         }
 
-        mysqli_stmt_bind_param($stmt, "ssi", $id, $data, $time);
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ssi",
+            $id,
+            $data,
+            $time
+        );
+
         $success = mysqli_stmt_execute($stmt);
+
         mysqli_stmt_close($stmt);
 
         return $success;
@@ -74,7 +91,8 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
     {
         $stmt = mysqli_prepare(
             $this->conn,
-            "DELETE FROM app_sessions WHERE session_id = ?"
+            "DELETE FROM app_sessions
+             WHERE session_id = ?"
         );
 
         if (!$stmt) {
@@ -82,7 +100,9 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_bind_param($stmt, "s", $id);
+
         $success = mysqli_stmt_execute($stmt);
+
         mysqli_stmt_close($stmt);
 
         return $success;
@@ -94,7 +114,8 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
 
         $stmt = mysqli_prepare(
             $this->conn,
-            "DELETE FROM app_sessions WHERE last_activity < ?"
+            "DELETE FROM app_sessions
+             WHERE last_activity < ?"
         );
 
         if (!$stmt) {
@@ -102,9 +123,14 @@ class AdminDatabaseSessionHandler implements SessionHandlerInterface
         }
 
         mysqli_stmt_bind_param($stmt, "i", $expire);
-        mysqli_stmt_execute($stmt);
+
+        if (!mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return false;
+        }
 
         $deleted = mysqli_stmt_affected_rows($stmt);
+
         mysqli_stmt_close($stmt);
 
         return $deleted;
@@ -121,8 +147,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
     $isHttps =
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
-        $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        (
+            !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+            $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+        );
 
     session_set_cookie_params([
         'lifetime' => 0,
