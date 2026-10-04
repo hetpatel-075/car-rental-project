@@ -97,15 +97,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
 
         // -------------------------
-        // NEW IMAGE UPLOAD
+        // NEW IMAGE UPLOAD TO CLOUDINARY
         // -------------------------
 
         $newImageUploaded = false;
 
-        if (
-            isset($_FILES['image']) &&
-            $_FILES['image']['error'] != UPLOAD_ERR_NO_FILE
-        ) {
+        if (isset($_FILES['image']) && $_FILES['image']['error'] != UPLOAD_ERR_NO_FILE) {
 
             if ($_FILES['image']['error'] == UPLOAD_ERR_OK) {
 
@@ -113,61 +110,67 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $tmpName = $_FILES['image']['tmp_name'];
                 $fileSize = $_FILES['image']['size'];
 
-                $extension = strtolower(
-                    pathinfo($originalName, PATHINFO_EXTENSION)
-                );
+                $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-                $allowedExtensions = [
-                    "jpg",
-                    "jpeg",
-                    "png",
-                    "webp"
-                ];
+                $allowedExtensions = ["jpg", "jpeg", "png", "webp"];
 
                 if (!in_array($extension, $allowedExtensions)) {
-
-                    $message =
-                        "Only JPG, JPEG, PNG and WEBP images are allowed.";
-
+                    $message = "Only JPG, JPEG, PNG and WEBP images are allowed.";
                     $messageType = "error";
 
                 } elseif ($fileSize > 5 * 1024 * 1024) {
-
-                    $message =
-                        "Image size must be less than 5 MB.";
-
+                    $message = "Image size must be less than 5 MB.";
                     $messageType = "error";
 
                 } else {
 
-                    $newImageName =
-                        time() . "_" .
-                        uniqid() . "." .
-                        $extension;
+                    $cloudName = "hct6y970";
+                    $uploadPreset = "car_rental_images";
+                    $uploadUrl = "https://api.cloudinary.com/v1_1/" . $cloudName . "/image/upload";
 
-                    $uploadPath =
-                        "../images/" . $newImageName;
+                    $curl = curl_init();
 
-                    if (move_uploaded_file($tmpName, $uploadPath)) {
+                    $postData = [
+                        "file" => curl_file_create($tmpName, mime_content_type($tmpName), $originalName),
+                        "upload_preset" => $uploadPreset,
+                        "folder" => "car_rental"
+                    ];
 
-                        $imageName = $newImageName;
-                        $newImageUploaded = true;
+                    curl_setopt_array($curl, [
+                        CURLOPT_URL => $uploadUrl,
+                        CURLOPT_POST => true,
+                        CURLOPT_POSTFIELDS => $postData,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_TIMEOUT => 60
+                    ]);
 
-                    } else {
+                    $response = curl_exec($curl);
+                    $curlError = curl_error($curl);
+                    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                    curl_close($curl);
 
-                        $message = "Failed to upload new image.";
+                    if ($response === false || $curlError || $httpCode < 200 || $httpCode >= 300) {
+                        $message = "Image upload failed. Please try again.";
                         $messageType = "error";
+                    } else {
+                        $cloudinaryData = json_decode($response, true);
+
+                        if (!empty($cloudinaryData['secure_url'])) {
+                            $imageName = $cloudinaryData['secure_url'];
+                            $newImageUploaded = true;
+                        } else {
+                            $message = "Cloudinary did not return an image URL.";
+                            $messageType = "error";
+                        }
                     }
                 }
 
             } else {
-
-                $message =
-                    "There was an error uploading the image.";
-
+                $message = "There was an error uploading the image.";
                 $messageType = "error";
             }
         }
+
 
 
         // -------------------------
@@ -895,8 +898,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php if (!empty($car['image'])) { ?>
 
                             <img
-                                src="../images/<?php
-                                echo htmlspecialchars($car['image']);
+                                src="<?php
+                                echo htmlspecialchars(
+                                    filter_var($car['image'], FILTER_VALIDATE_URL)
+                                        ? $car['image']
+                                        : "../images/" . $car['image']
+                                );
                                 ?>"
                                 class="current-image"
                                 alt="Current Car Image"
