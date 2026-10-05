@@ -351,26 +351,48 @@ $car = mysqli_fetch_assoc($result);
 
         <!-- Car Image -->
 
+        <!-- Car Image -->
+
         <div class="image-section">
-
-            <?php if (!empty($car['image']) && file_exists("images/" . $car['image'])) { ?>
-
+        
+            <?php
+            $carImage = trim($car['image'] ?? '');
+            $carImageUrl = '';
+        
+            if ($carImage !== '') {
+        
+                // Cloudinary / online image
+                if (
+                    strpos($carImage, 'http://') === 0 ||
+                    strpos($carImage, 'https://') === 0
+                ) {
+                    $carImageUrl = $carImage;
+                }
+        
+                // Local image
+                else {
+                    $carImageUrl = 'images/' . ltrim($carImage, '/');
+                }
+            }
+            ?>
+        
+            <?php if (!empty($carImageUrl)) { ?>
+        
                 <img
-                    src="images/<?php echo htmlspecialchars($car['image']); ?>"
-                    alt="<?php echo htmlspecialchars($car['car_name']); ?>"
+                    src="<?php echo htmlspecialchars($carImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                    alt="<?php echo htmlspecialchars($car['car_name'], ENT_QUOTES, 'UTF-8'); ?>"
                     class="car-image"
                 >
-
+        
             <?php } else { ?>
-
+        
                 <div class="no-image">
                     🚗
                 </div>
-
+        
             <?php } ?>
-
+        
         </div>
-
 
         <!-- Car Details -->
 
