@@ -789,15 +789,29 @@ $fuel_result = mysqli_query(
 
 
                     <?php
-                    if (
-                        !empty($car['image']) &&
-                        file_exists("images/" . $car['image'])
-                    ) {
+                    $image = trim($car['image'] ?? '');
+                    
+                    if ($image != '') {
+                    
+                        // If image is already a full URL (Cloudinary)
+                        if (
+                            strpos($image, 'http://') === 0 ||
+                            strpos($image, 'https://') === 0
+                        ) {
+                    
+                            $image_url = $image;
+                    
+                        } else {
+                    
+                            // For old images stored as local filenames
+                            $image_url = 'images/' . $image;
+                    
+                        }
                     ?>
-
+                    
                         <img
-                            src="images/<?php echo htmlspecialchars(
-                                $car['image'],
+                            src="<?php echo htmlspecialchars(
+                                $image_url,
                                 ENT_QUOTES,
                                 'UTF-8'
                             ); ?>"
@@ -808,13 +822,13 @@ $fuel_result = mysqli_query(
                                 'UTF-8'
                             ); ?>"
                         >
-
+                    
                     <?php } else { ?>
-
+                    
                         <div class="no-image">
                             🚗
                         </div>
-
+                    
                     <?php } ?>
 
 
