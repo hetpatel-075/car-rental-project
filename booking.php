@@ -427,10 +427,28 @@ if (strtolower($car['status']) != 'available') {
 
         <div class="car-section">
 
-            <?php if (!empty($car['image']) && file_exists("images/" . $car['image'])) { ?>
+            <?php
+            $carImage = trim($car['image'] ?? '');
+            $carImageUrl = '';
+
+            if ($carImage !== '') {
+                if (
+                    strpos($carImage, 'http://') === 0 ||
+                    strpos($carImage, 'https://') === 0
+                ) {
+                    // Online image such as Cloudinary
+                    $carImageUrl = $carImage;
+                } else {
+                    // Local image
+                    $carImageUrl = 'images/' . ltrim($carImage, '/');
+                }
+            }
+            ?>
+
+            <?php if (!empty($carImageUrl)) { ?>
 
                 <img
-                    src="images/<?php echo htmlspecialchars($car['image'], ENT_QUOTES, 'UTF-8'); ?>"
+                    src="<?php echo htmlspecialchars($carImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
                     class="car-image"
                     alt="<?php echo htmlspecialchars($car['car_name'], ENT_QUOTES, 'UTF-8'); ?>"
                 >
