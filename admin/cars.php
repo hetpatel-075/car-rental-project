@@ -726,12 +726,28 @@ if ($statsQuery) {
 
                         <td>
 
-                            <?php if (!empty($car['image'])) { ?>
+                            <?php
+                            $carImage = trim($car['image'] ?? '');
+                            $carImageUrl = '';
+
+                            if ($carImage !== '') {
+                                if (
+                                    strpos($carImage, 'http://') === 0 ||
+                                    strpos($carImage, 'https://') === 0
+                                ) {
+                                    $carImageUrl = $carImage;
+                                } else {
+                                    $carImageUrl = '../images/' . ltrim($carImage, '/');
+                                }
+                            }
+                            ?>
+
+                            <?php if (!empty($carImageUrl)) { ?>
 
                                 <img
-                                    src="../images/<?php echo htmlspecialchars($car['image']); ?>"
+                                    src="<?php echo htmlspecialchars($carImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                     class="car-image"
-                                    alt="Car"
+                                    alt="<?php echo htmlspecialchars($car['car_name'], ENT_QUOTES, 'UTF-8'); ?>"
                                 >
 
                             <?php } else { ?>
