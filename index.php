@@ -23,7 +23,7 @@ function getCarImage(array $car): string
         'venue' => 'venue.jpg', 'swift' => 'swift.jpg',
         'city' => 'city.jpg', 'nexon' => 'nexon.jpg',
         'm340i' => 'bmw.jpg', 'bmw' => 'bmw.jpg',
-        'mercedes' => 'bmw.jpg', 'urus' => 'bmw.jpg'
+        'mercedes' => 'mercedes.jpg', 'urus' => 'bmw.jpg'
     ];
 
     foreach ($aliases as $keyword => $file) {
