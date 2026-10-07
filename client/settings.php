@@ -9,13 +9,6 @@ if (!isset($_SESSION['user_id'])) {
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    $notifications = isset($_POST['notifications']) ? "ON" : "OFF";
-    $dark_mode = isset($_POST['dark_mode']) ? "ON" : "OFF";
-
-    // For now, settings are displayed as saved.
-    // We will store them in the database in a later step.
-
     $message = "Settings saved successfully!";
 }
 ?>
@@ -38,9 +31,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         body {
             background-color: #f4f6f9;
+            color: #222;
+            transition: 0.3s;
         }
 
-        /* Sidebar */
+        /* DARK MODE */
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
 
         .sidebar {
             width: 240px;
@@ -50,6 +50,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             left: 0;
             top: 0;
             padding-top: 20px;
+        }
+
+        body.dark-mode .sidebar {
+            background-color: #000;
         }
 
         .logo {
@@ -72,8 +76,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-color: #444;
         }
 
-        /* Main */
-
         .main {
             margin-left: 240px;
             padding: 40px;
@@ -89,11 +91,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        body.dark-mode .settings-box {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 8px rgba(255,255,255,0.05);
         }
 
         .setting {
             padding: 20px 0;
             border-bottom: 1px solid #ddd;
+        }
+
+        body.dark-mode .setting {
+            border-bottom: 1px solid #444;
         }
 
         .setting:last-child {
@@ -107,6 +119,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .setting p {
             color: #666;
             margin-bottom: 10px;
+        }
+
+        body.dark-mode .setting p {
+            color: #aaa;
         }
 
         .setting input {
@@ -126,6 +142,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .save-btn:hover {
             background-color: #444;
+        }
+
+        body.dark-mode .save-btn {
+            background-color: #ffffff;
+            color: #000;
         }
 
         .message {
@@ -151,6 +172,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-color: #444;
         }
 
+        body.dark-mode .password-btn {
+            background-color: #ffffff;
+            color: #000;
+        }
+
     </style>
 
 </head>
@@ -158,8 +184,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 
     <?php include "includes/sidebar.php"; ?>
-
-    <!-- Main Content -->
 
     <div class="main">
 
@@ -172,7 +196,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
         <?php } ?>
-
 
         <div class="settings-box">
 
@@ -217,6 +240,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <input
                             type="checkbox"
+                            id="darkMode"
                             name="dark_mode"
                         >
 
@@ -259,6 +283,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
     </div>
+
+
+    <!-- DARK MODE JAVASCRIPT -->
+
+    <script>
+
+        const darkMode = document.getElementById("darkMode");
+
+        // Load saved setting
+        if (localStorage.getItem("darkMode") === "ON") {
+
+            document.body.classList.add("dark-mode");
+
+            darkMode.checked = true;
+
+        }
+
+
+        // When checkbox is changed
+        darkMode.addEventListener("change", function() {
+
+            if (this.checked) {
+
+                document.body.classList.add("dark-mode");
+
+                localStorage.setItem("darkMode", "ON");
+
+            } else {
+
+                document.body.classList.remove("dark-mode");
+
+                localStorage.setItem("darkMode", "OFF");
+
+            }
+
+        });
+
+    </script>
 
 </body>
 
