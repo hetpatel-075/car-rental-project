@@ -2,8 +2,41 @@
 session_start();
 require_once __DIR__ . '/config/db.php';
 
+function getCarImage(array $car): string
+{
+    $imageDir = __DIR__ . '/images/';
+    $image = basename(trim((string)($car['image'] ?? '')));
+
+    if ($image !== '' && is_file($imageDir . $image)) {
+        return 'images/' . $image;
+    }
+
+    $search = strtolower(trim(
+        ($car['car_name'] ?? '') . ' ' .
+        ($car['brand'] ?? '') . ' ' .
+        ($car['model'] ?? '')
+    ));
+
+    $aliases = [
+        'innova' => 'innova.jpg', 'endeavour' => 'endeavour.jpg',
+        'fortuner' => 'fortuner.jpg', 'creta' => 'creta.jpg',
+        'venue' => 'venue.jpg', 'swift' => 'swift.jpg',
+        'city' => 'city.jpg', 'nexon' => 'nexon.jpg',
+        'm340i' => 'bmw.jpg', 'bmw' => 'bmw.jpg',
+        'mercedes' => 'bmw.jpg', 'urus' => 'bmw.jpg'
+    ];
+
+    foreach ($aliases as $keyword => $file) {
+        if (strpos($search, $keyword) !== false && is_file($imageDir . $file)) {
+            return 'images/' . $file;
+        }
+    }
+
+    return 'images/bmw.jpg';
+}
+
 $featured = [];
-$result = mysqli_query($conn, "SELECT * FROM cars ORDER BY car_id DESC LIMIT 6");
+$result = mysqli_query($conn, "SELECT * FROM cars ORDER BY car_id DESC LIMIT 12");
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
         $featured[] = $row;
@@ -104,14 +137,13 @@ ksort($types);
         <?php if ($featured): foreach ($featured as $car): ?>
             <article class="premium-car-card reveal" data-type="<?php echo htmlspecialchars(strtolower(trim($car['car_type'] ?? ''))); ?>" data-price="<?php echo (float)$car['price_per_day']; ?>" data-order="<?php echo (int)$car['car_id']; ?>" data-text="<?php echo htmlspecialchars(strtolower($car['car_name'].' '.$car['brand'].' '.$car['model'])); ?>">
                 <div class="premium-car-image">
-                    <?php if (!empty($car['image'])): ?>
-                        <img src="images/<?php echo htmlspecialchars($car['image']); ?>" alt="<?php echo htmlspecialchars($car['car_name']); ?>">
-                    <?php else: ?>
-                        <div class="no-image">🚘</div>
-                    <?php endif; ?>
-                    <span class="status-pill <?php echo strtolower($car['status']) === 'available' ? 'available' : 'unavailable'; ?>">
-                        <?php echo htmlspecialchars($car['status']); ?>
-                    </span>
+                    <?php $carImage = getCarImage($car); ?>
+                    <img
+                        src="<?php echo htmlspecialchars($carImage); ?>"
+                        alt="<?php echo htmlspecialchars($car['car_name']); ?>"
+                        onerror="this.onerror=null;this.src='images/bmw.jpg';"
+                    >
+                    <span class="status-pill available">Available</span>
                 </div>
                 <div class="premium-car-content">
                     <div class="car-topline"><span><?php echo htmlspecialchars($car['car_type']); ?></span><span><?php echo htmlspecialchars($car['fuel_type']); ?></span></div>
@@ -161,7 +193,7 @@ ksort($types);
     <div class="footer-content">
         <div><h3>🚘 Drive-Me</h3><p>Easy, fast and reliable car rental for your next journey.</p></div>
         <div><h4>Quick Links</h4><a href="index.php">Home</a><a href="cars.php">Cars</a><a href="login.php">Login</a><a href="register.php">Register</a></div>
-        <div><h4>Contact</h4><p>📧 drive_me@gmail.com.com</p><p>📞 +91 98765 43210</p></div>
+        <div><h4>Contact</h4><p>📧 support@drive-me.com</p><p>📞 +91 98765 43210</p></div>
     </div>
     <div class="footer-bottom"><p>© 2026 Drive-Me. All Rights Reserved.</p></div>
 </footer>
