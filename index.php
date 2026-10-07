@@ -193,7 +193,7 @@ ksort($types);
     <div class="footer-content">
         <div><h3>🚘 Drive-Me</h3><p>Easy, fast and reliable car rental for your next journey.</p></div>
         <div><h4>Quick Links</h4><a href="index.php">Home</a><a href="cars.php">Cars</a><a href="login.php">Login</a><a href="register.php">Register</a></div>
-        <div><h4>Contact</h4><p>📧 support@drive-me.com</p><p>📞 +91 98765 43210</p></div>
+        <div><h4>Contact</h4><p>📧 support-drive-me@gmail.com</p><p>📞 +91 98765 43210</p></div>
     </div>
     <div class="footer-bottom"><p>© 2026 Drive-Me. All Rights Reserved.</p></div>
 </footer>
