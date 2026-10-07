@@ -89,12 +89,6 @@ if ($date_search) {
         $return_date
     );
 
-    /*
-       Only cars which are currently Available
-       AND have no non-cancelled booking
-       during selected dates.
-    */
-
     $sql .= " AND LOWER(c.status) = 'available'
 
         AND NOT EXISTS (
@@ -284,6 +278,37 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
+
+/* =========================
+   SEARCH HELP TEXT
+========================= */
+
+.search-help {
+    margin-bottom: 16px;
+    padding: 13px 16px;
+    background: #eff6ff;
+    border-radius: 9px;
+    color: #1d4ed8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.search-help strong {
+    font-size: 15px;
+}
+
+.search-help span {
+    color: #64748b;
+    font-size: 14px;
+}
+
+
+/* =========================
+   FILTER FORM
+========================= */
+
 .filter-form {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1.1fr 1.1fr 1fr auto;
@@ -375,10 +400,10 @@ body {
 ========================= */
 
 .cars-container {
-    width: 90%;
-    max-width: 1400px;
-    margin: auto;
-    padding-bottom: 50px;
+    width: 86%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding-bottom: 60px;
 }
 
 .results-text {
@@ -393,7 +418,7 @@ body {
 .cars-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
+    gap: 28px;
 }
 
 .car-card {
@@ -539,6 +564,11 @@ body {
     color: #666;
 }
 
+.no-cars h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
 
 /* =========================
    RESPONSIVE
@@ -556,6 +586,10 @@ body {
 
     .filter-form {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .cars-container {
+        width: 90%;
     }
 
     .cars-grid {
@@ -579,17 +613,21 @@ body {
         grid-template-columns: 1fr;
     }
 
+    .cars-container {
+        width: 92%;
+    }
+
     .cars-grid {
         grid-template-columns: 1fr;
     }
 
-    .cars-container,
-    .filter-box {
-        width: 92%;
-    }
-
     .page-header h1 {
         font-size: 28px;
+    }
+
+    .search-help {
+        display: block;
+        line-height: 1.6;
     }
 
 }
@@ -625,6 +663,7 @@ body {
         <?php if (isset($_SESSION['user_id'])) { ?>
 
             <span class="welcome-text">
+
                 Welcome,
                 <?php
                 echo htmlspecialchars(
@@ -633,6 +672,7 @@ body {
                     'UTF-8'
                 );
                 ?>
+
             </span>
 
             <a href="my_bookings.php">
@@ -657,7 +697,7 @@ body {
 
 
 <!-- =========================
-     HEADER
+     PAGE HEADER
 ========================= -->
 
 <div class="page-header">
@@ -674,10 +714,27 @@ body {
 
 
 <!-- =========================
-     FILTERS
+     FILTER BOX
 ========================= -->
 
 <div class="filter-box">
+
+
+    <!-- HELPER TEXT -->
+
+    <div class="search-help">
+
+        <strong>
+            🔍 Check car availability
+        </strong>
+
+        <span>
+            Select pickup and return dates to check available cars,
+            or search by car, brand or model.
+        </span>
+
+    </div>
+
 
     <form
         method="GET"
@@ -689,7 +746,11 @@ body {
             type="text"
             name="search"
             placeholder="Search car, brand or model..."
-            value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>"
+            value="<?php echo htmlspecialchars(
+                $search,
+                ENT_QUOTES,
+                'UTF-8'
+            ); ?>"
         >
 
 
@@ -702,9 +763,16 @@ body {
             <?php while ($type = mysqli_fetch_assoc($type_result)) { ?>
 
                 <option
-                    value="<?php echo htmlspecialchars($type['car_type'], ENT_QUOTES, 'UTF-8'); ?>"
-                    <?php echo ($car_type == $type['car_type']) ? 'selected' : ''; ?>
+                    value="<?php echo htmlspecialchars(
+                        $type['car_type'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
+                    <?php echo (
+                        $car_type == $type['car_type']
+                    ) ? 'selected' : ''; ?>
                 >
+
                     <?php
                     echo htmlspecialchars(
                         $type['car_type'],
@@ -712,6 +780,7 @@ body {
                         'UTF-8'
                     );
                     ?>
+
                 </option>
 
             <?php } ?>
@@ -728,9 +797,16 @@ body {
             <?php while ($fuel = mysqli_fetch_assoc($fuel_result)) { ?>
 
                 <option
-                    value="<?php echo htmlspecialchars($fuel['fuel_type'], ENT_QUOTES, 'UTF-8'); ?>"
-                    <?php echo ($fuel_type == $fuel['fuel_type']) ? 'selected' : ''; ?>
+                    value="<?php echo htmlspecialchars(
+                        $fuel['fuel_type'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>"
+                    <?php echo (
+                        $fuel_type == $fuel['fuel_type']
+                    ) ? 'selected' : ''; ?>
                 >
+
                     <?php
                     echo htmlspecialchars(
                         $fuel['fuel_type'],
@@ -738,6 +814,7 @@ body {
                         'UTF-8'
                     );
                     ?>
+
                 </option>
 
             <?php } ?>
@@ -751,7 +828,11 @@ body {
             type="date"
             name="pickup_date"
             id="pickup_date"
-            value="<?php echo htmlspecialchars($pickup_date, ENT_QUOTES, 'UTF-8'); ?>"
+            value="<?php echo htmlspecialchars(
+                $pickup_date,
+                ENT_QUOTES,
+                'UTF-8'
+            ); ?>"
             title="Pickup Date"
         >
 
@@ -762,7 +843,11 @@ body {
             type="date"
             name="return_date"
             id="return_date"
-            value="<?php echo htmlspecialchars($return_date, ENT_QUOTES, 'UTF-8'); ?>"
+            value="<?php echo htmlspecialchars(
+                $return_date,
+                ENT_QUOTES,
+                'UTF-8'
+            ); ?>"
             title="Return Date"
         >
 
@@ -775,28 +860,36 @@ body {
 
             <option
                 value="price_low"
-                <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>
+                <?php echo (
+                    $sort == 'price_low'
+                ) ? 'selected' : ''; ?>
             >
                 Price: Low to High
             </option>
 
             <option
                 value="price_high"
-                <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>
+                <?php echo (
+                    $sort == 'price_high'
+                ) ? 'selected' : ''; ?>
             >
                 Price: High to Low
             </option>
 
             <option
                 value="name_az"
-                <?php echo ($sort == 'name_az') ? 'selected' : ''; ?>
+                <?php echo (
+                    $sort == 'name_az'
+                ) ? 'selected' : ''; ?>
             >
                 Name: A to Z
             </option>
 
             <option
                 value="name_za"
-                <?php echo ($sort == 'name_za') ? 'selected' : ''; ?>
+                <?php echo (
+                    $sort == 'name_za'
+                ) ? 'selected' : ''; ?>
             >
                 Name: Z to A
             </option>
@@ -817,7 +910,16 @@ body {
     <?php if ($date_error !== '') { ?>
 
         <div class="date-error">
-            ⚠️ <?php echo htmlspecialchars($date_error); ?>
+
+            ⚠️
+            <?php
+            echo htmlspecialchars(
+                $date_error,
+                ENT_QUOTES,
+                'UTF-8'
+            );
+            ?>
+
         </div>
 
     <?php } ?>
@@ -828,19 +930,31 @@ body {
         <div class="date-info">
 
             📅 Showing cars available from
+
             <strong>
-                <?php echo date('d M Y', strtotime($pickup_date)); ?>
+                <?php
+                echo date(
+                    'd M Y',
+                    strtotime($pickup_date)
+                );
+                ?>
             </strong>
 
             to
 
             <strong>
-                <?php echo date('d M Y', strtotime($return_date)); ?>
+                <?php
+                echo date(
+                    'd M Y',
+                    strtotime($return_date)
+                );
+                ?>
             </strong>
 
         </div>
 
     <?php } ?>
+
 
 </div>
 
@@ -850,6 +964,7 @@ body {
 ========================= -->
 
 <div class="cars-container">
+
 
     <div class="results-text">
 
@@ -874,9 +989,12 @@ body {
 
     <?php if ($car_count > 0) { ?>
 
+
         <div class="cars-grid">
 
+
             <?php while ($car = mysqli_fetch_assoc($result)) { ?>
+
 
                 <div class="car-card">
 
@@ -885,20 +1003,34 @@ body {
 
                     <?php
 
-                    $image = trim($car['image'] ?? '');
+                    $image = trim(
+                        $car['image'] ?? ''
+                    );
 
                     if ($image !== '') {
 
                         if (
-                            strpos($image, 'http://') === 0 ||
-                            strpos($image, 'https://') === 0
+                            strpos(
+                                $image,
+                                'http://'
+                            ) === 0 ||
+
+                            strpos(
+                                $image,
+                                'https://'
+                            ) === 0
                         ) {
 
                             $image_url = $image;
 
                         } else {
 
-                            $image_url = 'images/' . ltrim($image, '/');
+                            $image_url =
+                                'images/' .
+                                ltrim(
+                                    $image,
+                                    '/'
+                                );
 
                         }
 
@@ -1057,21 +1189,28 @@ body {
                         <?php if ($date_search) { ?>
 
                             <div class="status available">
+
                                 ● Available for selected dates
+
                             </div>
 
                         <?php } else { ?>
 
+
                             <?php
                             if (
                                 strtolower(
-                                    trim($car['status'])
+                                    trim(
+                                        $car['status']
+                                    )
                                 ) === 'available'
                             ) {
                             ?>
 
                                 <div class="status available">
+
                                     ● Available
+
                                 </div>
 
                             <?php } else { ?>
@@ -1091,6 +1230,7 @@ body {
                                 </div>
 
                             <?php } ?>
+
 
                         <?php } ?>
 
@@ -1116,22 +1256,37 @@ body {
 
                                 $booking_url .=
                                     "&pickup_date=" .
-                                    urlencode($pickup_date) .
+                                    urlencode(
+                                        $pickup_date
+                                    ) .
                                     "&return_date=" .
-                                    urlencode($return_date);
+                                    urlencode(
+                                        $return_date
+                                    );
+
                             }
 
                             ?>
 
 
-                            <?php if (
+                            <?php
+                            if (
                                 strtolower(
-                                    trim($car['status'])
+                                    trim(
+                                        $car['status']
+                                    )
                                 ) === 'available'
-                            ) { ?>
+                            ) {
+                            ?>
 
                                 <a
-                                    href="<?php echo htmlspecialchars($booking_url, ENT_QUOTES, 'UTF-8'); ?>"
+                                    href="<?php
+                                    echo htmlspecialchars(
+                                        $booking_url,
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    );
+                                    ?>"
                                     class="btn book-btn"
                                 >
                                     📅 Book Now
@@ -1140,7 +1295,9 @@ body {
                             <?php } else { ?>
 
                                 <span class="btn disabled-btn">
+
                                     Not Available
+
                                 </span>
 
                             <?php } ?>
@@ -1153,7 +1310,9 @@ body {
 
                 </div>
 
+
             <?php } ?>
+
 
         </div>
 
@@ -1162,6 +1321,7 @@ body {
 
 
         <div class="no-cars">
+
 
             <?php if ($date_search) { ?>
 
@@ -1194,9 +1354,12 @@ body {
                 View All Cars
             </a>
 
+
         </div>
 
+
     <?php } ?>
+
 
 </div>
 
@@ -1214,27 +1377,32 @@ const returnInput =
     document.getElementById("return_date");
 
 
-/* Today's date */
-
 const today = new Date();
 
-const year = today.getFullYear();
+const year =
+    today.getFullYear();
 
-const month = String(
-    today.getMonth() + 1
-).padStart(2, "0");
+const month =
+    String(
+        today.getMonth() + 1
+    ).padStart(2, "0");
 
-const day = String(
-    today.getDate()
-).padStart(2, "0");
+const day =
+    String(
+        today.getDate()
+    ).padStart(2, "0");
 
 const todayString =
-    year + "-" + month + "-" + day;
+    year + "-" +
+    month + "-" +
+    day;
 
 
-pickupInput.min = todayString;
+pickupInput.min =
+    todayString;
 
-returnInput.min = todayString;
+returnInput.min =
+    todayString;
 
 
 /* Return date cannot be before pickup date */
@@ -1243,7 +1411,8 @@ pickupInput.addEventListener(
     "change",
     function () {
 
-        returnInput.min = this.value;
+        returnInput.min =
+            this.value;
 
         if (
             returnInput.value !== "" &&
