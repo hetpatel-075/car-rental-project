@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/config/db.php';
 
 $featured = [];
-$result = mysqli_query($conn, "SELECT * FROM cars ORDER BY car_id DESC LIMIT 12");
+$result = mysqli_query($conn, "SELECT * FROM cars ORDER BY car_id DESC LIMIT 6");
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
         $featured[] = $row;
