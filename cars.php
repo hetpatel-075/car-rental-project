@@ -470,7 +470,7 @@ body {
 ========================= */
 
 .cars-container {
-    width: 86%;
+    width: 75%;
     max-width: 1600px;
     margin: 0 auto;
     padding-bottom: 60px;
