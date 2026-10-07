@@ -113,12 +113,7 @@ function getCarImage(array $car): string
         }
     }
 
-    /*
-     * 5. DO NOT USE BMW AS FALLBACK
-     *
-     * Return an empty value.
-     * JavaScript below will create a neutral placeholder.
-     */
+    
     return '';
 }
 
