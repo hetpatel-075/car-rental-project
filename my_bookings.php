@@ -12,7 +12,7 @@ $user_id = (int) $_SESSION['user_id'];
 
 /*
 |--------------------------------------------------------------------------
-| Find Car Image
+| Get Car Image
 |--------------------------------------------------------------------------
 */
 
@@ -24,98 +24,38 @@ function getCarImage($image)
         return '';
     }
 
-    $imageDir = __DIR__ . '/images/';
-
     /*
-     * Remove starting slash
+     * Cloudinary / External Image
      */
-    $clean = ltrim($image, '/\\');
-
-    /*
-     * Remove duplicate images/ if database already contains it
-     */
-    if (stripos($clean, 'images/') === 0) {
-        $clean = substr($clean, 7);
+    if (
+        strpos($image, 'https://') === 0 ||
+        strpos($image, 'http://') === 0
+    ) {
+        return $image;
     }
 
-    $clean = str_replace('\\', '/', $clean);
+    /*
+     * Local Image
+     */
+    $image = ltrim($image, '/\\');
 
     /*
-     * Possible locations
+     * Already contains images/
      */
-    $possibleFiles = [
-        $imageDir . $clean,
-        $imageDir . 'vehicles/' . basename($clean),
-        $imageDir . basename($clean)
-    ];
-
-    foreach ($possibleFiles as $file) {
-
-        if (is_file($file)) {
-
-            $relative = str_replace(
-                __DIR__ . '/',
-                '',
-                $file
-            );
-
-            return str_replace('\\', '/', $relative);
-        }
+    if (strpos($image, 'images/') === 0) {
+        return $image;
     }
-
 
     /*
-     * Case-insensitive search inside images folder
+     * Add images/
      */
-    if (is_dir($imageDir)) {
-
-        try {
-
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator(
-                    $imageDir,
-                    FilesystemIterator::SKIP_DOTS
-                )
-            );
-
-            $wanted = strtolower(basename($clean));
-
-            foreach ($iterator as $file) {
-
-                if (!$file->isFile()) {
-                    continue;
-                }
-
-                if (
-                    strtolower($file->getFilename()) === $wanted
-                ) {
-
-                    $relative = str_replace(
-                        __DIR__ . '/',
-                        '',
-                        $file->getPathname()
-                    );
-
-                    return str_replace(
-                        '\\',
-                        '/',
-                        $relative
-                    );
-                }
-            }
-
-        } catch (Exception $e) {
-            return '';
-        }
-    }
-
-    return '';
+    return 'images/' . $image;
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Get Bookings
+| Get User Bookings
 |--------------------------------------------------------------------------
 */
 
@@ -136,6 +76,7 @@ $result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -149,6 +90,7 @@ $result = mysqli_query($conn, $sql);
 
     <title>My Bookings - CarRental</title>
 
+
     <style>
 
         * {
@@ -158,22 +100,28 @@ $result = mysqli_query($conn, $sql);
             font-family: Arial, sans-serif;
         }
 
+
         body {
-            background-color: #f4f6f9;
+            background: #f4f6f9;
+            color: #222;
         }
 
 
-        /* SIDEBAR */
+        /* =========================
+           SIDEBAR
+        ========================= */
 
         .sidebar {
             width: 240px;
             height: 100vh;
-            background-color: #222;
+            background: #222;
             position: fixed;
             left: 0;
             top: 0;
             padding-top: 20px;
+            overflow-y: auto;
         }
+
 
         .logo {
             color: white;
@@ -183,6 +131,7 @@ $result = mysqli_query($conn, $sql);
             margin-bottom: 30px;
         }
 
+
         .sidebar a {
             display: block;
             color: white;
@@ -191,79 +140,97 @@ $result = mysqli_query($conn, $sql);
             font-size: 16px;
         }
 
+
         .sidebar a:hover {
-            background-color: #444;
+            background: #444;
         }
+
 
         .sidebar .active {
-            background-color: #444;
+            background: #444;
         }
 
 
-        /* MAIN */
+        /* =========================
+           MAIN
+        ========================= */
 
         .main {
             margin-left: 240px;
             padding: 35px;
-            max-width: 1600px;
+            width: calc(100% - 240px);
+            max-width: 1700px;
         }
+
 
         .main-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            gap: 20px;
         }
 
+
         .main-header h1 {
-            font-size: 30px;
+            font-size: 32px;
+            margin-bottom: 8px;
         }
+
 
         .main-header p {
             color: #666;
-            margin-top: 8px;
+            font-size: 18px;
         }
 
+
         .browse-btn {
-            background-color: #222;
+            background: #222;
             color: white;
             text-decoration: none;
             padding: 13px 20px;
-            border-radius: 6px;
+            border-radius: 7px;
+            white-space: nowrap;
         }
+
 
         .browse-btn:hover {
-            background-color: #444;
+            background: #444;
         }
 
 
-        /* BOOKING CARD */
+        /* =========================
+           BOOKING CARD
+        ========================= */
 
         .booking-card {
-            background-color: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
+            width: 100%;
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 25px;
             display: flex;
             gap: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            overflow: hidden;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
         }
 
 
-        /* IMAGE */
+        /* =========================
+           IMAGE
+        ========================= */
 
         .image-box {
-            width: 275px;
-            min-width: 275px;
-            height: 185px;
-            border-radius: 10px;
+            width: 310px;
+            min-width: 310px;
+            height: 210px;
+            border-radius: 12px;
             overflow: hidden;
             background: #eef1f5;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
 
         .car-image {
             width: 100%;
@@ -272,126 +239,158 @@ $result = mysqli_query($conn, $sql);
             display: block;
         }
 
+
         .no-image {
-            color: #888;
-            font-size: 15px;
-            text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-size: 16px;
         }
 
 
-        /* BOOKING DETAILS */
+        /* =========================
+           DETAILS
+        ========================= */
 
         .booking-details {
             flex: 1;
             min-width: 0;
         }
 
+
         .booking-title {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 15px;
-            margin-bottom: 18px;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
+
         .booking-title h2 {
-            font-size: 24px;
+            font-size: 27px;
             margin-bottom: 5px;
         }
 
+
         .booking-id {
             color: #777;
-            font-size: 14px;
+            font-size: 15px;
         }
 
 
-        /* INFORMATION */
+        /* =========================
+           INFORMATION GRID
+        ========================= */
 
         .info-grid {
+            width: 100%;
             display: grid;
-            grid-template-columns: repeat(3, minmax(150px, 1fr));
+            grid-template-columns: repeat(3, minmax(140px, 1fr));
             gap: 12px;
         }
 
+
         .info {
-            padding: 12px;
-            background-color: #f7f8fa;
-            border-radius: 7px;
+            background: #f7f8fa;
+            padding: 13px;
+            border-radius: 8px;
             min-width: 0;
         }
 
+
         .info strong {
             display: block;
-            font-size: 12px;
             color: #777;
+            font-size: 12px;
             margin-bottom: 6px;
         }
 
+
         .info span {
+            display: block;
             font-size: 15px;
-            word-break: break-word;
+            color: #111;
+            overflow-wrap: anywhere;
         }
 
 
-        /* STATUS */
+        /* =========================
+           STATUS
+        ========================= */
 
         .status {
             display: inline-block;
-            padding: 6px 12px;
-            border-radius: 15px;
+            padding: 7px 13px;
+            border-radius: 20px;
             font-size: 13px;
             font-weight: bold;
             white-space: nowrap;
         }
 
+
         .pending {
-            background-color: #fff3cd;
+            background: #fff3cd;
             color: #856404;
         }
 
+
         .confirmed {
-            background-color: #d4edda;
+            background: #d4edda;
             color: #155724;
         }
 
+
         .cancelled {
-            background-color: #f8d7da;
+            background: #f8d7da;
             color: #721c24;
         }
 
 
-        /* AMOUNT */
+        /* =========================
+           AMOUNT
+        ========================= */
 
         .amount-box {
-            margin-top: 18px;
-            font-size: 16px;
+            margin-top: 20px;
+            font-size: 17px;
         }
+
 
         .amount {
-            font-size: 21px;
-            font-weight: bold;
             color: #111;
+            font-size: 23px;
+            font-weight: bold;
+            margin-left: 5px;
         }
 
 
-        /* EMPTY */
+        /* =========================
+           EMPTY
+        ========================= */
 
         .empty {
-            background-color: white;
+            background: white;
             text-align: center;
-            padding: 50px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 60px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
+
         .empty-icon {
-            font-size: 50px;
+            font-size: 55px;
             margin-bottom: 15px;
         }
+
 
         .empty h2 {
             margin-bottom: 10px;
         }
+
 
         .empty p {
             color: #666;
@@ -399,105 +398,158 @@ $result = mysqli_query($conn, $sql);
         }
 
 
-        /* RESPONSIVE */
+        /* =========================
+           TABLET
+        ========================= */
 
-        @media (max-width: 1100px) {
+        @media (max-width: 1200px) {
 
             .booking-card {
-                gap: 20px;
+                gap: 22px;
             }
 
+
             .image-box {
-                width: 230px;
-                min-width: 230px;
+                width: 260px;
+                min-width: 260px;
+                height: 190px;
             }
+
 
             .info-grid {
                 grid-template-columns: repeat(2, minmax(140px, 1fr));
             }
+
         }
 
 
-        @media (max-width: 800px) {
+        /* =========================
+           SMALL TABLET
+        ========================= */
+
+        @media (max-width: 900px) {
 
             .sidebar {
-                width: 200px;
+                width: 210px;
             }
 
+
             .main {
-                margin-left: 200px;
+                margin-left: 210px;
+                width: calc(100% - 210px);
                 padding: 25px;
             }
+
 
             .booking-card {
                 display: block;
             }
 
+
             .image-box {
                 width: 100%;
                 min-width: 0;
-                height: 230px;
-                margin-bottom: 20px;
+                height: 250px;
+                margin-bottom: 22px;
             }
 
-            .info-grid {
-                grid-template-columns: repeat(2, 1fr);
+
+            .booking-title {
+                align-items: flex-start;
             }
+
         }
 
 
-        @media (max-width: 600px) {
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 650px) {
 
             .sidebar {
+                position: relative;
                 width: 100%;
                 height: auto;
-                position: relative;
                 padding-bottom: 10px;
             }
 
-            .sidebar a {
-                padding: 10px 20px;
-            }
 
             .main {
                 margin-left: 0;
+                width: 100%;
                 padding: 20px;
             }
+
 
             .main-header {
                 display: block;
             }
+
+
+            .main-header h1 {
+                font-size: 27px;
+            }
+
+
+            .main-header p {
+                font-size: 16px;
+            }
+
 
             .browse-btn {
                 display: inline-block;
                 margin-top: 15px;
             }
 
+
             .booking-card {
                 padding: 15px;
             }
 
-            .info-grid {
-                grid-template-columns: 1fr;
+
+            .image-box {
+                height: 210px;
             }
+
 
             .booking-title {
                 display: block;
             }
 
+
             .status {
-                margin-top: 10px;
+                margin-top: 12px;
             }
+
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .booking-title h2 {
+                font-size: 23px;
+            }
+
+
+            .amount {
+                font-size: 20px;
+            }
+
         }
 
     </style>
 
 </head>
 
+
 <body>
 
 
-<!-- SIDEBAR -->
+<!-- =========================
+     SIDEBAR
+========================= -->
 
 <div class="sidebar">
 
@@ -505,29 +557,39 @@ $result = mysqli_query($conn, $sql);
         🚗 CarRental
     </div>
 
+
     <a href="client/dashboard.php">
         🏠 Dashboard
     </a>
+
 
     <a href="client/profile.php">
         👤 My Profile
     </a>
 
+
     <a href="cars.php">
         🚘 Browse Cars
     </a>
 
-    <a href="my_bookings.php" class="active">
+
+    <a
+        href="my_bookings.php"
+        class="active"
+    >
         📅 My Bookings
     </a>
+
 
     <a href="client/history.php">
         🕘 Booking History
     </a>
 
+
     <a href="client/settings.php">
         ⚙️ Settings
     </a>
+
 
     <a href="logout.php">
         🚪 Logout
@@ -536,9 +598,14 @@ $result = mysqli_query($conn, $sql);
 </div>
 
 
-<!-- MAIN -->
+<!-- =========================
+     MAIN CONTENT
+========================= -->
 
 <div class="main">
+
+
+    <!-- HEADER -->
 
     <div class="main-header">
 
@@ -554,7 +621,11 @@ $result = mysqli_query($conn, $sql);
 
         </div>
 
-        <a href="cars.php" class="browse-btn">
+
+        <a
+            href="cars.php"
+            class="browse-btn"
+        >
             🚘 Browse Cars
         </a>
 
@@ -566,7 +637,12 @@ $result = mysqli_query($conn, $sql);
 
         <?php while ($booking = mysqli_fetch_assoc($result)) { ?>
 
+
             <?php
+
+            /*
+             * Get correct image URL
+             */
 
             $imagePath = getCarImage(
                 $booking['image'] ?? ''
@@ -575,14 +651,18 @@ $result = mysqli_query($conn, $sql);
             ?>
 
 
+            <!-- BOOKING CARD -->
+
             <div class="booking-card">
 
 
-                <!-- CAR IMAGE -->
+                <!-- IMAGE -->
 
                 <div class="image-box">
 
+
                     <?php if ($imagePath !== '') { ?>
+
 
                         <img
                             src="<?php echo htmlspecialchars(
@@ -592,12 +672,13 @@ $result = mysqli_query($conn, $sql);
                             ); ?>"
                             class="car-image"
                             alt="<?php echo htmlspecialchars(
-                                $booking['car_name'],
+                                $booking['car_name'] ?? 'Car',
                                 ENT_QUOTES,
                                 'UTF-8'
                             ); ?>"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                         >
+
 
                         <div
                             class="no-image"
@@ -606,13 +687,17 @@ $result = mysqli_query($conn, $sql);
                             🚗 Image not available
                         </div>
 
+
                     <?php } else { ?>
+
 
                         <div class="no-image">
                             🚗 Image not available
                         </div>
 
+
                     <?php } ?>
+
 
                 </div>
 
@@ -622,25 +707,40 @@ $result = mysqli_query($conn, $sql);
                 <div class="booking-details">
 
 
+                    <!-- TITLE -->
+
                     <div class="booking-title">
+
 
                         <div>
 
                             <h2>
+
                                 <?php
+
                                 echo htmlspecialchars(
-                                    $booking['car_name'],
+                                    $booking['car_name'] ?? 'Car',
                                     ENT_QUOTES,
                                     'UTF-8'
                                 );
+
                                 ?>
+
                             </h2>
 
+
                             <span class="booking-id">
+
                                 Booking ID:
-                                #<?php
+
+                                #
+
+                                <?php
+
                                 echo (int) $booking['booking_id'];
+
                                 ?>
+
                             </span>
 
                         </div>
@@ -649,26 +749,46 @@ $result = mysqli_query($conn, $sql);
                         <?php
 
                         $status = strtolower(
-                            $booking['booking_status']
+                            trim(
+                                $booking['booking_status'] ?? 'Pending'
+                            )
                         );
+
+                        $status_class = '';
+
+                        if ($status === 'pending') {
+
+                            $status_class = 'pending';
+
+                        } elseif ($status === 'confirmed') {
+
+                            $status_class = 'confirmed';
+
+                        } elseif ($status === 'cancelled') {
+
+                            $status_class = 'cancelled';
+
+                        }
 
                         ?>
 
-                        <span class="status <?php echo htmlspecialchars(
-                            $status,
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ); ?>">
+
+                        <span
+                            class="status <?php echo $status_class; ?>"
+                        >
 
                             <?php
+
                             echo htmlspecialchars(
-                                $booking['booking_status'],
+                                $booking['booking_status'] ?? 'Pending',
                                 ENT_QUOTES,
                                 'UTF-8'
                             );
+
                             ?>
 
                         </span>
+
 
                     </div>
 
@@ -678,6 +798,8 @@ $result = mysqli_query($conn, $sql);
                     <div class="info-grid">
 
 
+                        <!-- BRAND -->
+
                         <div class="info">
 
                             <strong>
@@ -685,17 +807,23 @@ $result = mysqli_query($conn, $sql);
                             </strong>
 
                             <span>
+
                                 <?php
+
                                 echo htmlspecialchars(
-                                    $booking['brand'],
+                                    $booking['brand'] ?? '-',
                                     ENT_QUOTES,
                                     'UTF-8'
                                 );
+
                                 ?>
+
                             </span>
 
                         </div>
 
+
+                        <!-- MODEL -->
 
                         <div class="info">
 
@@ -704,17 +832,23 @@ $result = mysqli_query($conn, $sql);
                             </strong>
 
                             <span>
+
                                 <?php
+
                                 echo htmlspecialchars(
-                                    $booking['model'],
+                                    $booking['model'] ?? '-',
                                     ENT_QUOTES,
                                     'UTF-8'
                                 );
+
                                 ?>
+
                             </span>
 
                         </div>
 
+
+                        <!-- PICKUP DATE -->
 
                         <div class="info">
 
@@ -723,17 +857,23 @@ $result = mysqli_query($conn, $sql);
                             </strong>
 
                             <span>
+
                                 <?php
+
                                 echo htmlspecialchars(
-                                    $booking['pickup_date'],
+                                    $booking['pickup_date'] ?? '-',
                                     ENT_QUOTES,
                                     'UTF-8'
                                 );
+
                                 ?>
+
                             </span>
 
                         </div>
 
+
+                        <!-- RETURN DATE -->
 
                         <div class="info">
 
@@ -742,17 +882,23 @@ $result = mysqli_query($conn, $sql);
                             </strong>
 
                             <span>
+
                                 <?php
+
                                 echo htmlspecialchars(
-                                    $booking['return_date'],
+                                    $booking['return_date'] ?? '-',
                                     ENT_QUOTES,
                                     'UTF-8'
                                 );
+
                                 ?>
+
                             </span>
 
                         </div>
 
+
+                        <!-- TOTAL DAYS -->
 
                         <div class="info">
 
@@ -761,13 +907,23 @@ $result = mysqli_query($conn, $sql);
                             </strong>
 
                             <span>
+
                                 <?php
-                                echo (int) $booking['total_days'];
+
+                                echo (int) (
+                                    $booking['total_days'] ?? 0
+                                );
+
                                 ?>
+
+                                day(s)
+
                             </span>
 
                         </div>
 
+
+                        <!-- BOOKING DATE -->
 
                         <div class="info">
 
@@ -776,14 +932,26 @@ $result = mysqli_query($conn, $sql);
                             </strong>
 
                             <span>
+
                                 <?php
-                                echo date(
-                                    "d M Y",
-                                    strtotime(
-                                        $booking['created_at']
-                                    )
-                                );
+
+                                if (!empty($booking['created_at'])) {
+
+                                    echo date(
+                                        "d M Y",
+                                        strtotime(
+                                            $booking['created_at']
+                                        )
+                                    );
+
+                                } else {
+
+                                    echo '-';
+
+                                }
+
                                 ?>
+
                             </span>
 
                         </div>
@@ -792,6 +960,8 @@ $result = mysqli_query($conn, $sql);
                     </div>
 
 
+                    <!-- AMOUNT -->
+
                     <div class="amount-box">
 
                         Booking Amount:
@@ -799,10 +969,14 @@ $result = mysqli_query($conn, $sql);
                         <span class="amount">
 
                             ₹<?php
+
                             echo number_format(
-                                (float) $booking['total_amount'],
+                                (float) (
+                                    $booking['total_amount'] ?? 0
+                                ),
                                 2
                             );
+
                             ?>
 
                         </span>
@@ -822,21 +996,29 @@ $result = mysqli_query($conn, $sql);
     <?php } else { ?>
 
 
+        <!-- NO BOOKINGS -->
+
         <div class="empty">
 
             <div class="empty-icon">
                 🚘
             </div>
 
+
             <h2>
                 No Bookings Yet
             </h2>
+
 
             <p>
                 You haven't booked a car yet.
             </p>
 
-            <a href="cars.php" class="browse-btn">
+
+            <a
+                href="cars.php"
+                class="browse-btn"
+            >
                 Browse Available Cars
             </a>
 
@@ -847,6 +1029,7 @@ $result = mysqli_query($conn, $sql);
 
 
 </div>
+
 
 </body>
 
